@@ -139,7 +139,7 @@ func NewHandler(ctx context.Context, cfg *Config, name string) (*Handler, error)
 		}
 	}
 
-	block, err := aes.NewCipher([]byte(cfg.Key))
+	block, err := aes.NewCipher([]byte(cfg.SessionKey))
 	if err != nil {
 		return nil, fmt.Errorf("new cipher: %w", err)
 	}

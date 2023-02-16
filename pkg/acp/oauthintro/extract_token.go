@@ -19,6 +19,7 @@ package oauthintro
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -33,32 +34,20 @@ type TokenSource struct {
 }
 
 func extractToken(req *http.Request, src TokenSource) (string, error) {
-	if src.Header != "" {
-		tok := req.Header.Get(src.Header)
-
-		if src.Header == "Authorization" && src.HeaderAuthScheme != "" {
-			parts := strings.SplitN(tok, " ", 2)
-			if len(parts) < 2 || parts[0] != src.HeaderAuthScheme {
-				return "", errors.New("invalid auth scheme")
-			}
-
-			return strings.TrimSpace(parts[1]), nil
-		}
-
-		return tok, nil
+	token, err := getTokenFromHeader(req.Header, src.Header, src.HeaderAuthScheme)
+	if err != nil {
+		return "", fmt.Errorf("extract token from header: %w", err)
+	}
+	if token != "" {
+		return token, nil
 	}
 
-	if src.Query != "" {
-		if uri := originalURI(req.Header); uri != "" {
-			parsedURI, err := url.Parse(uri)
-			if err != nil {
-				return "", err
-			}
-
-			if qry := parsedURI.Query().Get(src.Query); qry != "" {
-				return qry, nil
-			}
-		}
+	token, err = getTokenFromQuery(req.Header, src.Query)
+	if err != nil {
+		return "", fmt.Errorf("extract token from query: %w", err)
+	}
+	if token != "" {
+		return token, nil
 	}
 
 	if src.Cookie != "" {
@@ -68,6 +57,47 @@ func extractToken(req *http.Request, src TokenSource) (string, error) {
 	}
 
 	return "", errors.New("missing token source")
+}
+
+func getTokenFromHeader(header http.Header, headerName, headerAuthScheme string) (string, error) {
+	if headerName == "" {
+		return "", nil
+	}
+
+	token := header.Get(headerName)
+	if token == "" {
+		return "", nil
+	}
+
+	if headerName == "Authorization" && headerAuthScheme != "" {
+		parts := strings.SplitN(token, " ", 2)
+		if len(parts) < 2 || parts[0] != headerAuthScheme {
+			return "", errors.New("invalid auth scheme")
+		}
+
+		return strings.TrimSpace(parts[1]), nil
+	}
+
+	return token, nil
+}
+
+func getTokenFromQuery(header http.Header, tokenName string) (string, error) {
+	if tokenName == "" {
+		return "", nil
+	}
+
+	if uri := originalURI(header); uri != "" {
+		parsedURI, err := url.Parse(uri)
+		if err != nil {
+			return "", err
+		}
+
+		if qry := parsedURI.Query().Get(tokenName); qry != "" {
+			return qry, nil
+		}
+	}
+
+	return "", nil
 }
 
 // originalURI gets the original URI that was sent to the ingress controller, regardless of its type.

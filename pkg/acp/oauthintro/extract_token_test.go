@@ -47,6 +47,26 @@ func Test_extractToken(t *testing.T) {
 			want: "token",
 		},
 		{
+			desc: "token extracted from query with all token sources set",
+			source: TokenSource{
+				Header: "Authorization",
+				Query:  "tok",
+				Cookie: "tok",
+			},
+			queryTraefik: "tok=token",
+			want:         "token",
+		},
+		{
+			desc: "token extracted from cookie with all token sources set",
+			source: TokenSource{
+				Header: "Authorization",
+				Query:  "tok",
+				Cookie: "token",
+			},
+			cookie: "token=token",
+			want:   "token",
+		},
+		{
 			desc: "token extracted from header (bearer)",
 			source: TokenSource{
 				Header:           "Authorization",
@@ -112,7 +132,7 @@ func Test_extractToken(t *testing.T) {
 			header: http.Header{
 				"Authorization": []string{"Basic token"},
 			},
-			wantErr: "invalid auth scheme",
+			wantErr: "extract token from header: invalid auth scheme",
 		},
 		{
 			desc:    "missing token source",

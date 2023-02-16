@@ -140,17 +140,12 @@ func (h *Handler) getAPIkey(req *http.Request) (string, error) {
 		}
 	}
 
-	if h.query != "" {
-		if uri := originalURI(req.Header); uri != "" {
-			parsedURI, err := url.Parse(uri)
-			if err != nil {
-				return "", err
-			}
-
-			if qry := parsedURI.Query().Get(h.query); qry != "" {
-				return qry, nil
-			}
-		}
+	apiKey, err := getAPIKeyFromQuery(req.Header, h.query)
+	if err != nil {
+		return "", fmt.Errorf("get API Key from query: %w", err)
+	}
+	if apiKey != "" {
+		return apiKey, nil
 	}
 
 	if h.cookie != "" {
@@ -160,6 +155,25 @@ func (h *Handler) getAPIkey(req *http.Request) (string, error) {
 	}
 
 	return "", errors.New("missing API key")
+}
+
+func getAPIKeyFromQuery(header http.Header, queryName string) (string, error) {
+	if queryName == "" {
+		return "", nil
+	}
+
+	if uri := originalURI(header); uri != "" {
+		parsedURI, err := url.Parse(uri)
+		if err != nil {
+			return "", err
+		}
+
+		if qry := parsedURI.Query().Get(queryName); qry != "" {
+			return qry, nil
+		}
+	}
+
+	return "", nil
 }
 
 // originalURI gets the original URI that was sent to the ingress controller, regardless of its type.

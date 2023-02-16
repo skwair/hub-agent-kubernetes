@@ -161,7 +161,6 @@ linters:
     - ireturn
     - contextcheck
     - errchkjson
-    - musttag
 
 issues:
   exclude-use-default: false
@@ -252,17 +251,15 @@ issues:
       text: "cyclomatic complexity 16 of func `(.*).run` is high"
       linters:
         - gocyclo
-    # Reducing complexity would reduce readability.
-    - path: pkg/acp/apikey/api_key.go
-      text: "(.*) has complex nested blocks \\(complexity: 5\\)"
+    # Intended.
+    - path: pkg/httpclient/client.go
+      text: "G402: TLS InsecureSkipVerify may be true"
+    - path: pkg/acp/config.go
+      text: "exported fields should be annotated with the \"json\" tag"
+      linters:
+        - musttag
     - path: portal/embed.go
       linters:
         - gochecknoglobals
     - path: portal/embed.go
       text: "pattern dist: no matching files found"
-    # Reducing complexity would reduce readability.
-    - path: pkg/acp/oauthintro/extract_token.go
-      text: "(.*) has complex nested blocks \\(complexity: 5\\)"
-    # Intended.
-    - path: pkg/httpclient/client.go
-      text: "G402: TLS InsecureSkipVerify may be true"

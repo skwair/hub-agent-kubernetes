@@ -142,7 +142,7 @@ func (h *Handler) getAPIkey(req *http.Request) (string, error) {
 
 	apiKey, err := getAPIKeyFromQuery(req.Header, h.query)
 	if err != nil {
-		return "", fmt.Errorf("get API Key from query: %w", err)
+		return "", err
 	}
 	if apiKey != "" {
 		return apiKey, nil

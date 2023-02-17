@@ -26,6 +26,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+const redactedValue = "redacted"
+
 func (f *Fetcher) getAccessControlPolicies() (map[string]*AccessControlPolicy, error) {
 	policies, err := f.hub.Hub().V1alpha1().AccessControlPolicies().Lister().List(labels.Everything())
 	if err != nil {
@@ -228,8 +230,6 @@ func makeAccessControlPolicyOAuthIntro(cfg *hubv1alpha1.AccessControlOAuthIntro)
 
 	return policy
 }
-
-const redactedValue = "redacted"
 
 func redactPasswords(rawUsers []string) string {
 	var users []string

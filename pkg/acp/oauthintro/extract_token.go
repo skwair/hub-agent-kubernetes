@@ -19,7 +19,6 @@ package oauthintro
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -34,20 +33,20 @@ type TokenSource struct {
 }
 
 func extractToken(req *http.Request, src TokenSource) (string, error) {
-	token, err := getTokenFromHeader(req.Header, src.Header, src.HeaderAuthScheme)
-	if err != nil {
-		return "", fmt.Errorf("extract token from header: %w", err)
-	}
-	if token != "" {
-		return token, nil
+	if src.Header != "" {
+		if token := getTokenFromHeader(req.Header, src.Header, src.HeaderAuthScheme); token != "" {
+			return token, nil
+		}
 	}
 
-	token, err = getTokenFromQuery(req.Header, src.Query)
-	if err != nil {
-		return "", fmt.Errorf("extract token from query: %w", err)
-	}
-	if token != "" {
-		return token, nil
+	if src.Query != "" {
+		token, err := getTokenFromQuery(req.Header, src.Query)
+		if err != nil {
+			return "", err
+		}
+		if token != "" {
+			return token, nil
+		}
 	}
 
 	if src.Cookie != "" {
@@ -59,40 +58,32 @@ func extractToken(req *http.Request, src TokenSource) (string, error) {
 	return "", errors.New("missing token source")
 }
 
-func getTokenFromHeader(header http.Header, headerName, headerAuthScheme string) (string, error) {
-	if headerName == "" {
-		return "", nil
-	}
-
+func getTokenFromHeader(header http.Header, headerName, headerAuthScheme string) string {
 	token := header.Get(headerName)
 	if token == "" {
-		return "", nil
+		return ""
 	}
 
 	if headerName == "Authorization" && headerAuthScheme != "" {
 		parts := strings.SplitN(token, " ", 2)
 		if len(parts) < 2 || parts[0] != headerAuthScheme {
-			return "", errors.New("invalid auth scheme")
+			return ""
 		}
 
-		return strings.TrimSpace(parts[1]), nil
+		return strings.TrimSpace(parts[1])
 	}
 
-	return token, nil
+	return token
 }
 
-func getTokenFromQuery(header http.Header, tokenName string) (string, error) {
-	if tokenName == "" {
-		return "", nil
-	}
-
+func getTokenFromQuery(header http.Header, key string) (string, error) {
 	if uri := originalURI(header); uri != "" {
 		parsedURI, err := url.Parse(uri)
 		if err != nil {
 			return "", err
 		}
 
-		if qry := parsedURI.Query().Get(tokenName); qry != "" {
+		if qry := parsedURI.Query().Get(key); qry != "" {
 			return qry, nil
 		}
 	}

@@ -147,8 +147,7 @@ func (w *Watcher) OnUpdate(oldObj, newObj interface{}) {
 		newRefs := secretReferences(v)
 		w.secretRefCounterMu.Lock()
 		for _, ref := range oldRefs {
-			c := w.secretRefCounter[ref]
-			if c > 1 {
+			if w.secretRefCounter[ref] > 1 {
 				w.secretRefCounter[ref]--
 			} else {
 				delete(w.secretRefCounter, ref)

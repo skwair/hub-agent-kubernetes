@@ -124,7 +124,7 @@ func Test_extractToken(t *testing.T) {
 			want:         "token1",
 		},
 		{
-			desc: "invalid scheme",
+			desc: "invalid Authorization header scheme",
 			source: TokenSource{
 				Header:           "Authorization",
 				HeaderAuthScheme: "Bearer",
@@ -132,7 +132,7 @@ func Test_extractToken(t *testing.T) {
 			header: http.Header{
 				"Authorization": []string{"Basic token"},
 			},
-			wantErr: "extract token from header: invalid auth scheme",
+			want: "",
 		},
 		{
 			desc:    "missing token source",

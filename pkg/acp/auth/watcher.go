@@ -187,8 +187,7 @@ func (w *Watcher) OnDelete(obj interface{}) {
 		refs := secretReferences(v)
 		w.secretRefCounterMu.Lock()
 		for _, ref := range refs {
-			c := w.secretRefCounter[ref]
-			if c > 1 {
+			if w.secretRefCounter[ref] > 1 {
 				w.secretRefCounter[ref]--
 			} else {
 				delete(w.secretRefCounter, ref)

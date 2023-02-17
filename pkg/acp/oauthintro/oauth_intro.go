@@ -87,7 +87,7 @@ func NewHandler(cfg *Config, polName string) (*Handler, error) {
 	}
 
 	if cfg.ClientConfig.Auth.Kind == "" {
-		return nil, errors.New(`one of "Basic", "Bearer", "Header" or "Query" must be set`)
+		return nil, errors.New(`empty kind: one of "Basic", "Bearer", "Header" or "Query" must be set`)
 	}
 
 	if cfg.ClientConfig.Auth.Secret.Name == "" {

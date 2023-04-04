@@ -52,9 +52,9 @@ type collection struct {
 	authorizedGroups []string
 }
 
-func (c *collection) authorizes(haveGroups []string) bool {
+func (c *collection) authorizes(userGroups []string) bool {
 	for _, group := range c.authorizedGroups {
-		if slices.Contains(haveGroups, group) {
+		if slices.Contains(userGroups, group) {
 			return true
 		}
 	}
@@ -68,9 +68,9 @@ type api struct {
 	authorizedGroups []string
 }
 
-func (a *api) authorizes(haveGroups []string) bool {
+func (a *api) authorizes(userGroups []string) bool {
 	for _, group := range a.authorizedGroups {
-		if slices.Contains(haveGroups, group) {
+		if slices.Contains(userGroups, group) {
 			return true
 		}
 	}

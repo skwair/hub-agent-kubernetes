@@ -36,6 +36,8 @@ import (
 	logwrapper "github.com/traefik/hub-agent-kubernetes/pkg/logger"
 )
 
+const headerHubGroups = "Hub-Groups"
+
 // PortalAPI is a handler that exposes APIPortal information.
 type PortalAPI struct {
 	router     chi.Router
@@ -71,12 +73,12 @@ func (p *PortalAPI) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (p *PortalAPI) handleListAPIs(rw http.ResponseWriter, r *http.Request) {
-	haveGroups := r.Header.Values("Hub-Groups")
+	userGroups := r.Header.Values(headerHubGroups)
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(rw).Encode(buildListResp(p.portal, haveGroups)); err != nil {
+	if err := json.NewEncoder(rw).Encode(buildListResp(p.portal, userGroups)); err != nil {
 		log.Error().Err(err).
 			Str("portal_name", p.portal.Name).
 			Msg("Write list APIs response")
@@ -92,7 +94,7 @@ func (p *PortalAPI) handleGetAPISpec(rw http.ResponseWriter, r *http.Request) {
 		Logger()
 
 	a, ok := p.portal.Gateway.APIs[apiNameNamespace]
-	if !ok || !a.authorizes(r.Header.Values("Hub-Groups")) {
+	if !ok || !a.authorizes(r.Header.Values(headerHubGroups)) {
 		rw.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -111,7 +113,7 @@ func (p *PortalAPI) handleGetCollectionAPISpec(rw http.ResponseWriter, r *http.R
 		Logger()
 
 	c, ok := p.portal.Gateway.Collections[collectionName]
-	if !ok || !c.authorizes(r.Header.Values("Hub-Groups")) {
+	if !ok || !c.authorizes(r.Header.Values(headerHubGroups)) {
 		rw.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -304,10 +306,10 @@ type apiResp struct {
 	SpecLink   string `json:"specLink"`
 }
 
-func buildListResp(p *portal, haveGroups []string) listResp {
+func buildListResp(p *portal, userGroups []string) listResp {
 	var resp listResp
 	for collectionName, c := range p.Gateway.Collections {
-		if !c.authorizes(haveGroups) {
+		if !c.authorizes(userGroups) {
 			continue
 		}
 
@@ -331,7 +333,7 @@ func buildListResp(p *portal, haveGroups []string) listResp {
 	sortCollectionsResp(resp.Collections)
 
 	for apiNameNamespace, a := range p.Gateway.APIs {
-		if !a.authorizes(haveGroups) {
+		if !a.authorizes(userGroups) {
 			continue
 		}
 
